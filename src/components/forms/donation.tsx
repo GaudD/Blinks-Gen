@@ -129,7 +129,7 @@ export default function DonationForm() {
                         const blinkId = response.data.id;
                         console.log('Form submitted successfully:', response.data);
 
-                        router.push(`/generatedBlink?blinkId=${blinkId}`);
+                        router.push(`/generated-blink?blinkId=${blinkId}`);
                     } else {
                         console.error('Form submission failed:', response.data);
                     }
