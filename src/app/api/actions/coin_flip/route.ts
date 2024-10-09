@@ -4,8 +4,7 @@ import {
     ActionPostResponse,
     ACTIONS_CORS_HEADERS,
     createPostResponse,
-    LinkedAction,
-    NextActionLink
+    LinkedAction
 } from "@solana/actions";
 import { clusterApiUrl, ComputeBudgetProgram, Connection, PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
 
@@ -15,7 +14,6 @@ const headers = {
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     ...ACTIONS_CORS_HEADERS // Include any other headers you need
 };
-
 
 // First Blink: GET request to select "Heads" or "Tails"
 export const GET = () => {
@@ -53,10 +51,12 @@ export const GET = () => {
     }
 };
 
-export const OPTIONS = GET;
+export const OPTIONS = async () => Response.json(null, { headers });
 
 // First Blink: POST request to store the choice and chain the bet amount selection
 export const POST = async (req: Request) => {
+    console.log("POST request initiated 1st Blink");
+    
     try {
         const url = new URL(req.url);
 
@@ -89,18 +89,17 @@ export const POST = async (req: Request) => {
         transaction.feePayer = account;
         transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
 
-        const next: NextActionLink = {
-            type: 'post',
-            href: `/api/actions/coin_flip/bet?choice=${choice}`
-        };
         
         const payload: ActionPostResponse = await createPostResponse({
             fields: {
                 type: 'transaction',
                 transaction,
-                message: 'Choice stored on chain. Select your bet amount.',
+                message: 'Select your bet amount.',
                 links: {
-                    next
+                    next: {
+                        type: 'post',
+                        href: `/api/actions/coin_flip/bet?choice=${choice}`
+                    }
                 },
             }
         });

@@ -1,11 +1,9 @@
 import {
     ActionError,
-  ActionPostRequest,
-  ActionPostResponse,
+  ActionGetResponse,
   ACTIONS_CORS_HEADERS,
-  createPostResponse
+  LinkedAction
 } from "@solana/actions";
-import { clusterApiUrl, ComputeBudgetProgram, Connection, PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
 
 const headers = {
     'Access-Control-Allow-Origin': 'https://dial.to',
@@ -29,57 +27,50 @@ export const OPTIONS = async () => {
 
 // Second Blink: POST request to handle bet amount selection
 export const POST = async (req: Request) => {
-  try {
-      const url = new URL(req.url);
-      const body: ActionPostRequest = await req.json();
+    try {
+        const url = new URL(req.url);
 
-      const choice = url.searchParams.get('choice');
-      const amount = url.searchParams.get('amount');
-      if (!choice || !amount) {
-          return Response.json({ error: 'Both choice and amount parameters are required' }, { status: 400 });
-      }
+        const choice = url.searchParams.get('choice');
+        if (!choice) {
+            return Response.json({ error: 'Choice parameter is required' }, { status: 400 });
+        }
 
-      let account: PublicKey;
-      try {
-          account = new PublicKey(body.account);
-      } catch {
-          throw "Invalid account provided, not a real Public Key";
-      }
+        // Generate response for user to select a betting amount
+        const actions: LinkedAction[] = [
+            {
+                href: `/api/actions/coin_flip/bet/final?choice=${choice}&amount=0.1`,
+                type: 'post',
+                label: '0.1 SOL'
+            },
+            {
+                href: `/api/actions/coin_flip/bet/final?choice=${choice}&amount=0.25`,
+                type: 'post',
+                label: '0.25 SOL'
+            }, {
+                href: `/api/actions/coin_flip/bet/final?choice=${choice}&amount=0.5`,
+                type: 'post',
+                label: '0.5 SOL'
+            }
+        ];
+        
+        const payload: ActionGetResponse = {
+            title: "Coin Flip",
+            icon: 'https://avatars.dzeninfra.ru/get-zen_doc/4387099/pub_6414b8e4731cd5494e985337_6414b912dac81b380e5d2a4f/scale_1200',
+            description: 'Choose the bet Amount',
+            label: 'Choose',
+            links: {
+                actions
+            }
+        };
 
-      const connection = new Connection(clusterApiUrl("devnet"));
+        return Response.json(payload, {
+            status: 200,
+            headers: ACTIONS_CORS_HEADERS
+        });
 
-      // Transaction to store the bet amount
-      const transaction = new Transaction().add(
-          ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 1000 }),
-          new TransactionInstruction({
-              programId: new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'),
-              data: Buffer.from(`${choice},${amount}`, "utf-8"),
-              keys: [],
-          })
-      );
-
-      transaction.feePayer = account;
-      transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
-
-      // Generate the result of the coin flip
-      const result = Math.random() < 0.5 ? 'heads' : 'tails'; // Random result for demonstration
-      const resultMessage = `You chose ${choice}. The result is ${result}. Bet amount was ${amount} SOL.`;
-
-      const payload: ActionPostResponse = await createPostResponse({
-          fields: {
-              type: 'transaction',
-              transaction,
-              message: resultMessage,
-          }
-      });
-
-      return Response.json(payload, {
-          status: 200,
-          headers: ACTIONS_CORS_HEADERS
-      });
-
-  } catch (error) {
-      console.error('Error occurred', error);
-      return Response.json({ error: 'Error occurred' }, { status: 500 });
-  }
+    } catch (error) {
+        console.error('Error occurred', error);
+        return Response.json({ error: 'Error occurred' }, { status: 500 });
+    }
 };
+
