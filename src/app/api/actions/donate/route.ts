@@ -51,17 +51,6 @@ export const GET = async (req: Request) => {
                 label: `${amount3} SOL`,
                 type: "transaction",
             },
-            {
-                href: "/api/actions/donate?id=${id}&amount={amount}",
-                label: label,
-                parameters: [
-                    {
-                        name: "amount",
-                        label: "Enter a SOL amount",
-                    },
-                ],
-                type: "transaction",
-            },
         ];
 
         const payload: ActionGetResponse = {
