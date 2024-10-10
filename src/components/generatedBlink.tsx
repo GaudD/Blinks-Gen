@@ -13,7 +13,7 @@ export default function GeneratedBlink() {
         const id = params.get('blinkId');
 
         if (id) {
-            setBlinkUrl(`${window.location.origin}/api/actions/donate?id=${id}`); // Construct the blink URL
+            setBlinkUrl(`${window.location.origin}/donate?id=${id}`); // Construct the blink URL
         }
     }, []);
 
