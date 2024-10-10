@@ -5,7 +5,7 @@ import {
   ACTIONS_CORS_HEADERS,
   createPostResponse,
 } from "@solana/actions";
-import { clusterApiUrl, Connection, PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js";
+import { clusterApiUrl, Connection, PublicKey, SystemProgram, Transaction, TransactionInstruction } from "@solana/web3.js";
 
 const headers = {
     'Access-Control-Allow-Origin': 'https://dial.to',
@@ -35,6 +35,8 @@ export const POST = async (req: Request) => {
             return Response.json({ error: 'Choice and Amount parameters are required' }, { status: 400 });
         }
 
+        const amountLamports = Number(amount) * 1e9;
+
         // Account validation
         let account: PublicKey;
         try {
@@ -45,13 +47,23 @@ export const POST = async (req: Request) => {
 
         const connection = new Connection(clusterApiUrl("devnet"));
 
+        const houseAccount = new PublicKey("G76xtuTjgT81ywag7fXjAoQNxv7E6DB3SBs21rSQYgrq");
+
+        const transaction = new Transaction().add(
+            SystemProgram.transfer({
+                fromPubkey: account,
+                toPubkey: houseAccount,
+                lamports: amountLamports,
+            })
+        );
+
         // Determine coin flip result with 48% win probability 2% House Advantage
-        const win = Math.random() < 0.48;
+        const win = Math.random() < 0.99;
         const result = win ? choice : (choice === "heads" ? "tails" : "heads"); // User loses if the result is the opposite choice
         const resultMessage = win ? `You won!` : `You lost!`;
 
         // Transaction to store choice, amount, and result
-        const transaction = new Transaction().add(
+        transaction.add(
             new TransactionInstruction({
                 programId: new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr'),
                 data: Buffer.from(`Choice: ${choice}, Bet: ${amount} SOL, Result: ${resultMessage}`, "utf-8"),

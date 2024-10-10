@@ -42,7 +42,7 @@ export const POST = async (req: Request) => {
                 links: {
                     actions: [
                         {
-                            href: '',
+                            href: `/api/actions/coin_flip/bet/result/won?result=${result}&amount=${0.1}`,
                             type: 'transaction',
                             label: 'Claim'
                         }
