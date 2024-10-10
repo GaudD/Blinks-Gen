@@ -40,12 +40,13 @@ export const POST = async (req: Request) => {
             throw new Error("Invalid account provided, not a valid Public Key");
         }
 
-        const houseAccountSecretPhrase = "chef ivory laundry will street attitude slide neutral garbage theme biology sunset"; // Replace this with the actual phrase
+        const houseAccountSecretPhrase = ""; // Replace this with the actual phrase
 
         // Derive the keypair from the secret phrase
         const seed = mnemonicToSeedSync(houseAccountSecretPhrase);
         const secretKey = seed.slice(0, 32); // Get the first 32 bytes for the keypair
-        const houseAccount = Keypair.fromSecretKey(secretKey);        const connection = new Connection(clusterApiUrl("devnet"));
+        const houseAccount = Keypair.fromSecretKey(secretKey);
+        const connection = new Connection(clusterApiUrl("devnet"));
 
         const transaction = new Transaction().add(
             SystemProgram.transfer({
